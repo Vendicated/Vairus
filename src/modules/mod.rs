@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, error::Error};
 
 use lazy_static::lazy_static;
 use serenity::{async_trait, model::prelude::Message, prelude::Context};
@@ -26,18 +26,23 @@ lazy_static! {
 
 #[async_trait]
 pub trait Command {
-    async fn execute(&self, ctx: &Context, msg: &Message, args: Vec<String>);
+    async fn execute(
+        &self,
+        ctx: &Context,
+        msg: &Message,
+        args: Vec<String>,
+    ) -> Result<(), Box<dyn Error>>;
     fn name(&self) -> String;
     fn aliases(&self) -> &'static [&str];
 }
 
 #[macro_export]
 macro_rules! cmd {
-    ($name: ident, $aliases: tt, async fn execute $params:tt $body:tt) => {
+    ($name: ident, $aliases: tt, async fn execute $params:tt -> Result<(), Box<dyn Error>> $body:tt) => {
         pub struct $name;
         #[serenity::async_trait]
         impl $crate::modules::Command for $name {
-            async fn execute$params$body
+            async fn execute$params -> Result<(), Box<dyn std::error::Error>> $body
 
             fn name(&self) -> String {
                 stringify!($name).to_owned()

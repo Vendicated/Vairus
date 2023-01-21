@@ -1,12 +1,16 @@
 use serenity::{
     async_trait,
-    model::prelude::{Message, Ready},
+    model::{
+        prelude::{Message, Ready},
+        webhook::WebhookType,
+    },
     prelude::{Context, EventHandler},
     utils::parse_quotes,
+    FutureExt,
 };
 
 use crate::{
-    config::CONFIG,
+    config::{get_bot_owner, CONFIG},
     modules::{moderate::moderate_msg, COMMANDS},
 };
 
@@ -22,7 +26,7 @@ impl EventHandler for VaiusHandler {
     }
 
     async fn message(&self, ctx: Context, msg: Message) {
-        if msg.author.bot {
+        if msg.author.bot || msg.author.id != *get_bot_owner() {
             return;
         }
 
@@ -36,14 +40,31 @@ impl EventHandler for VaiusHandler {
 
         let content = &msg.content[CONFIG.prefix.len()..];
         let args = parse_quotes(content);
-        dbg!(&args);
-        let cmd = match args.first() {
+        let cmd_name = match args.first() {
             Some(cmd) => cmd,
             None => return,
         };
 
-        if let Some(cmd) = COMMANDS.get(cmd) {
-            cmd.execute(&ctx, &msg, args[1..].to_vec()).await;
-        }
+        let cmd = match COMMANDS.get(cmd_name) {
+            Some(cmd) => cmd,
+            None => return,
+        };
+
+        if let Err(why) = cmd.execute(&ctx, &msg, args).await {
+            println!("Error executing command: {:?}", why);
+            // for some reason spawn is necessary here or you get a BIIIIIG wall of explosions???
+            // "future cannot be sent between threads safely"
+            // future is not Send as this value is used across an await
+
+            let reason = format!("{}", why);
+            tokio::spawn(async move {
+                _ = msg
+                    .reply(
+                        ctx.http,
+                        format!("oopsie woopsie uwu we made a fucky wucky (copilot typed this, not me)\n```\n{}```", reason)
+                    )
+                    .await;
+            });
+        };
     }
 }
