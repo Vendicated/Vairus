@@ -1,9 +1,7 @@
-use std::{collections::HashMap, future::Future, pin::Pin};
+use std::collections::HashMap;
 
 use lazy_static::lazy_static;
-use serenity::{
-    async_trait, futures::future::BoxFuture, model::prelude::Message, prelude::Context,
-};
+use serenity::{async_trait, model::prelude::Message, prelude::Context};
 
 use self::eval::Eval;
 
@@ -17,7 +15,7 @@ lazy_static! {
         COMMANDS_LIST.iter().fold(
             HashMap::<String, &'static (dyn Command + Sync)>::new(),
             |mut map, cmd| -> HashMap<_, _> {
-                map.insert(cmd.name(), *cmd);
+                map.insert(cmd.name().to_lowercase(), *cmd);
                 for alias in cmd.aliases() {
                     map.insert(alias.to_string(), *cmd);
                 }
@@ -48,6 +46,5 @@ macro_rules! cmd {
                 &$aliases
             }
         }
-        unsafe impl Sync for $name {}
     };
 }

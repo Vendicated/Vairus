@@ -1,5 +1,3 @@
-use std::{future::Future, pin::Pin};
-
 use serenity::{model::prelude::Message, prelude::Context};
 
 use crate::cmd;
