@@ -6,15 +6,25 @@ use serenity::{model::prelude::Message, prelude::Context};
 use crate::cmd;
 
 cmd!(
-    Eval,
-    ["e"],
+    name: Eval,
+    aliases: ["e"],
+    owner_only: true,
+
     async fn execute(
         &self,
         ctx: &Context,
         msg: &Message,
-        args: Vec<String>,
+        args: Vec<&str>,
     ) -> Result<(), Box<dyn Error>> {
-        let code = args.join(" ");
+        let mut code = args.join(" ");
+        if code.starts_with("```") && code.ends_with("```") {
+            let mut cleaned_code = &code[3..code.len() - 3];
+            if cleaned_code.starts_with("rs") {
+                cleaned_code = &cleaned_code[2..];
+            }
+            code = cleaned_code.trim().to_owned();
+        };
+
         let clean_code = format!(
             r#"
         use std::fmt::Display;

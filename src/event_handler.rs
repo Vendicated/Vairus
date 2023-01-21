@@ -1,12 +1,7 @@
 use serenity::{
     async_trait,
-    model::{
-        prelude::{Message, Ready},
-        webhook::WebhookType,
-    },
+    model::prelude::{Message, Ready},
     prelude::{Context, EventHandler},
-    utils::parse_quotes,
-    FutureExt,
 };
 
 use crate::{
@@ -26,7 +21,7 @@ impl EventHandler for VaiusHandler {
     }
 
     async fn message(&self, ctx: Context, msg: Message) {
-        if msg.author.bot || msg.author.id != *get_bot_owner() {
+        if msg.author.bot {
             return;
         }
 
@@ -38,19 +33,24 @@ impl EventHandler for VaiusHandler {
             return;
         }
 
-        let content = &msg.content[CONFIG.prefix.len()..];
-        let args = parse_quotes(content);
-        let cmd_name = match args.first() {
+        let content = &msg.content[CONFIG.prefix.len()..].trim();
+        let mut args_iter = content.split_ascii_whitespace();
+        let cmd_name = match args_iter.next() {
+            Some(cmd) => cmd.to_lowercase(),
+            None => return,
+        };
+
+        let cmd = match COMMANDS.get(&cmd_name) {
             Some(cmd) => cmd,
             None => return,
         };
 
-        let cmd = match COMMANDS.get(cmd_name) {
-            Some(cmd) => cmd,
-            None => return,
-        };
+        if cmd.owner_only() && msg.author.id != *get_bot_owner() {
+            _ = msg.reply(&ctx.http, "nop").await;
+            return;
+        }
 
-        if let Err(why) = cmd.execute(&ctx, &msg, args).await {
+        if let Err(why) = cmd.execute(&ctx, &msg, args_iter.collect()).await {
             println!("Error executing command: {:?}", why);
             // for some reason spawn is necessary here or you get a BIIIIIG wall of explosions???
             // "future cannot be sent between threads safely"
@@ -60,7 +60,7 @@ impl EventHandler for VaiusHandler {
             tokio::spawn(async move {
                 _ = msg
                     .reply(
-                        ctx.http,
+                        &ctx.http,
                         format!("oopsie woopsie uwu we made a fucky wucky (copilot typed this, not me)\n```\n{}```", reason)
                     )
                     .await;

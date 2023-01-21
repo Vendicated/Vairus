@@ -10,6 +10,7 @@ macro_rules! env_var {
 macro_rules! global {
     ($name:ident : $type:ty, $getter:ident) => {
         pub static mut $name: Option<$type> = None;
+        #[inline]
         pub fn $getter() -> &'static $type {
             unsafe {
                 $name

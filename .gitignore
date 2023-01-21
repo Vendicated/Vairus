@@ -2,3 +2,5 @@
 
 eval.*
 code.rs
+
+.env
