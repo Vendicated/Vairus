@@ -50,21 +50,19 @@ impl EventHandler for VaiusHandler {
             return;
         }
 
-        if let Err(why) = cmd.execute(&ctx, &msg, args_iter.collect()).await {
-            println!("Error executing command: {:?}", why);
-            // for some reason spawn is necessary here or you get a BIIIIIG wall of explosions???
-            // "future cannot be sent between threads safely"
-            // future is not Send as this value is used across an await
-
-            let reason = format!("{}", why);
-            tokio::spawn(async move {
-                _ = msg
-                    .reply(
-                        &ctx.http,
-                        format!("oopsie woopsie uwu we made a fucky wucky (copilot typed this, not me)\n```\n{}```", reason)
-                    )
-                    .await;
-            });
+        let error = match cmd.execute(&ctx, &msg, args_iter.collect()).await {
+            Ok(_) => return,
+            Err(why) => {
+                println!("Error executing command: {:?}", why);
+                format!("{}", why)
+            }
         };
+
+        _ = msg
+            .reply(
+                &ctx.http,
+                format!("Uh-Oh, something went wrong :c\n```\n{}```", error),
+            )
+            .await;
     }
 }
