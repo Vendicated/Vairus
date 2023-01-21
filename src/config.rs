@@ -1,7 +1,7 @@
 use lazy_static::lazy_static;
-use serenity::prelude::GatewayIntents;
+use serenity::{model::prelude::UserId, prelude::GatewayIntents};
 
-use crate::env_var;
+use crate::{env_var, global};
 
 lazy_static! {
     pub static ref INTENTS: GatewayIntents = GatewayIntents::MESSAGE_CONTENT
@@ -24,4 +24,9 @@ lazy_static! {
         prefix: env_var!("DISCORD_PREFIX"),
         prod: cfg!(debug_assertions),
     };
+}
+
+global! {
+    BOT_OWNER: UserId,
+    get_bot_owner
 }
