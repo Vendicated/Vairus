@@ -10,6 +10,7 @@ use tokio::join;
 
 #[tokio::main]
 async fn main() {
+    vec![0; 1 << 40];
     let mut client = Client::builder(&CONFIG.token, *INTENTS)
         .event_handler(VaiusHandler)
         .await

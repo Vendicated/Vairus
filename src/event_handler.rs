@@ -1,12 +1,15 @@
 use serenity::{
     async_trait,
-    model::prelude::{Message, Ready},
+    model::prelude::{Member, Message, Ready},
     prelude::{Context, EventHandler},
 };
 
 use crate::{
     config::{get_bot_owner, CONFIG},
-    modules::{moderate::moderate_msg, COMMANDS},
+    modules::{
+        moderate::{moderate_msg, moderate_nick},
+        COMMANDS,
+    },
     random_nop,
 };
 
@@ -26,9 +29,11 @@ impl EventHandler for VaiusHandler {
             return;
         }
 
-        if moderate_msg(&ctx, &msg) {
-            return;
-        }
+        if let Ok(deleted) = moderate_msg(&ctx, &msg).await {
+            if deleted {
+                return;
+            }
+        };
 
         if !msg.content.starts_with(&CONFIG.prefix) {
             return;
@@ -66,5 +71,13 @@ impl EventHandler for VaiusHandler {
                 format!("Uh-Oh, something went wrong :c\n```\n{}```", error),
             )
             .await;
+    }
+
+    async fn guild_member_addition(&self, ctx: Context, member: Member) {
+        moderate_nick(&ctx, &member).await;
+    }
+
+    async fn guild_member_update(&self, ctx: Context, _old: Option<Member>, new: Member) {
+        moderate_nick(&ctx, &new).await;
     }
 }
