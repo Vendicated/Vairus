@@ -7,6 +7,7 @@ use serenity::{
 use crate::{
     config::{get_bot_owner, CONFIG},
     modules::{moderate::moderate_msg, COMMANDS},
+    random_nop,
 };
 
 pub struct VaiusHandler;
@@ -33,7 +34,7 @@ impl EventHandler for VaiusHandler {
             return;
         }
 
-        let content = &msg.content[CONFIG.prefix.len()..].trim();
+        let content: &str = msg.content[CONFIG.prefix.len()..].trim();
         let mut args_iter = content.split_ascii_whitespace();
         let cmd_name = match args_iter.next() {
             Some(cmd) => cmd.to_lowercase(),
@@ -46,7 +47,8 @@ impl EventHandler for VaiusHandler {
         };
 
         if cmd.owner_only() && msg.author.id != *get_bot_owner() {
-            _ = msg.reply(&ctx.http, "nop").await;
+            let nop = random_nop!();
+            _ = msg.reply(&ctx.http, nop).await;
             return;
         }
 

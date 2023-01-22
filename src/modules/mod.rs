@@ -3,14 +3,15 @@ use std::{collections::HashMap, error::Error};
 use lazy_static::lazy_static;
 use serenity::{async_trait, model::prelude::Message, prelude::Context};
 
-use self::{eval::Eval, ping::Ping};
+use self::{ban::Ban, eval::Eval, ping::Ping};
 
+mod ban;
 mod eval;
 mod ping;
 
 pub mod moderate;
 
-pub const COMMANDS_LIST: &[&(dyn Command + Sync)] = &[&Eval, &Ping];
+pub const COMMANDS_LIST: &[&(dyn Command + Sync)] = &[&Eval, &Ping, &Ban];
 
 lazy_static! {
     pub static ref COMMANDS: HashMap<String, &'static (dyn Command + Sync)> =

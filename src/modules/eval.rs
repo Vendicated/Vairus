@@ -59,7 +59,7 @@ cmd!(
         };
 
         msg.channel_id
-            .say(&ctx.http, format!("Result: {}", res))
+            .say(&ctx.http, format!("Result: ```\n{}```", res))
             .await
             .expect("bad");
 
