@@ -21,11 +21,13 @@ cmd!(
 
         if !perms.ban_members() {
             let nop = random_nop!();
-            msg.channel_id.say(&ctx.http, nop).await?;
+            msg.reply(&ctx.http, nop).await?;
             return Ok(())
         }
 
-        let mut reason = "No reason provided".to_owned();
+        let mut reason = msg.author.tag();
+        reason.push_str(": ");
+
         let mut iter = args.iter();
 
         let ids = iter.by_ref().map_while(|a| {
@@ -36,7 +38,7 @@ cmd!(
             };
 
             parsed.or_else(|| {
-                reason = a.to_string();
+                reason.push_str(a);
                 None
             })
         }).collect::<Vec<_>>();
@@ -46,8 +48,14 @@ cmd!(
             return Ok(())
         }
 
-        let reason_rest = iter.cloned().collect::<String>();
-        reason += &reason_rest;
+        for s in iter.copied() {
+            reason.push(' ');
+            reason.push_str(s);
+        }
+
+        if ids.len() == args.len() {
+            reason.push_str(" No reason provided");
+        }
 
         let mut builder = MessageBuilder::new();
 
