@@ -58,13 +58,10 @@ macro_rules! random_nop {
 }
 
 pub async fn get_self_perms(ctx: &Context, guild_id: GuildId) -> Option<Permissions> {
-    let me = match guild_id
+    guild_id
         .member(&ctx.http, ctx.cache.current_user_id())
         .await
-    {
-        Ok(me) => me,
-        Err(_) => return None,
-    };
-
-    me.permissions(&ctx.cache).ok()
+        .ok()?
+        .permissions(&ctx.cache)
+        .ok()
 }

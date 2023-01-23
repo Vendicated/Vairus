@@ -29,10 +29,8 @@ impl EventHandler for VaiusHandler {
             return;
         }
 
-        if let Ok(deleted) = moderate_msg(&ctx, &msg).await {
-            if deleted {
-                return;
-            }
+        if let Ok(true) = moderate_msg(&ctx, &msg).await {
+            return;
         };
 
         if !msg.content.starts_with(&CONFIG.prefix) {
